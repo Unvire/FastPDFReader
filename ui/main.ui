@@ -85,7 +85,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="selectedFolderLabel">
             <property name="text">
              <string>Selected folder:</string>
             </property>
@@ -251,17 +251,15 @@
       </item>
       <item>
        <widget class="QTableWidget" name="tableWidget">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
         <property name="dragDropOverwriteMode">
          <bool>true</bool>
         </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
-        <column>
-         <property name="text">
-          <string>No.</string>
-         </property>
-        </column>
         <column>
          <property name="text">
           <string>File</string>
