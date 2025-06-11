@@ -6,10 +6,12 @@ import time
 class FastPdfSearcher:
     def __init__(self):
         self.timeStamp = None
-        
+
     
     def _elapsedTime(self) -> float:
         return time.time() - self.timeStamp
+    
+    def _calculateNumberOfProcesses()
 
 
 if __name__ == '__main__':
