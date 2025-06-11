@@ -14,9 +14,22 @@
    <string>Fast PDF Searcher</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_4">
+   <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,1,0">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
+     <spacer name="horizontalSpacer_11">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,1,0">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
@@ -232,35 +245,58 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget">
+        <property name="dragDropOverwriteMode">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>No.</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>File</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Page</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tableWidget">
-      <property name="dragDropOverwriteMode">
-       <bool>true</bool>
+     <spacer name="horizontalSpacer_12">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::SingleSelection</enum>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
       </property>
-      <column>
-       <property name="text">
-        <string>No.</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>File</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Page</string>
-       </property>
-      </column>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_7" stretch=""/>
+     </spacer>
     </item>
    </layout>
   </widget>
