@@ -1,10 +1,7 @@
-import os, time, re, multiprocessing
+import os, re, multiprocessing
 import fitz
 
 class FastPdfSearcher:
-    def __init__(self):
-        self.timeStamp = None
-
     def searchPDFs(self, folderPath:str, pdfFileNames:list[str], pattern:str) -> list[tuple[str, int]]:
         numOfProcesses = self._numberOfProcesses()
         pdfFileNamesChunked = self._splitFilesListToChunks(pdfFileNames, numOfProcesses)
@@ -14,9 +11,6 @@ class FastPdfSearcher:
             results = pool.map(FastPdfSearcher.searchPdfChunk, processArguments)
         
         return self._flattenSearchResult(results)
-    
-    def _elapsedTime(self) -> float:
-        return time.time() - self.timeStamp
     
     def _numberOfProcesses(self) -> int:
         return multiprocessing.cpu_count()
