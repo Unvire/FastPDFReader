@@ -1,6 +1,7 @@
-import os, subprocess, sys, platform
+import os, subprocess, platform
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtCore import Qt
 
 class ResultTableWidgetWrapper:    
     COLUMNS_WEIGHT = [0.7, 0.3]
@@ -12,6 +13,8 @@ class ResultTableWidgetWrapper:
         self.folderPath = ''
 
         self.tableWidget.itemDoubleClicked.connect(self._rowDoubleClickEvent)
+        self.tableWidget.setMouseTracking(True)
+        self.tableWidget.cellEntered.connect(self._onCellHover)
     
     def setFolderPath(self, folderPath:str):
         self.folderPath = folderPath
@@ -42,9 +45,12 @@ class ResultTableWidgetWrapper:
             return 
         
         filename = filenameItem.text()
-        self.openPdfFile(filename)
+        self._openPdfFile(filename)
+    
+    def _onCellHover(self, row, column):
+        self.tableWidget.setCursor(Qt.PointingHandCursor)
         
-    def openPdfFile(self, filepath: str):
+    def _openPdfFile(self, filepath: str):
         fullFilePath = os.path.join(self.folderPath, filepath)
         handler = PdfOpenerFactory()
         handler.openFile(fullFilePath)
