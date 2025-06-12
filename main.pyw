@@ -18,6 +18,8 @@ class FastPdfSearcherGUI(QMainWindow):
         self.fastPdfSearcher = FastPdfSearcher()
         
         self.bindEvents()
+
+        self.searchFilesButton.setEnabled(False)
     
     def bindEvents(self):
         self.openFolderButton.clicked.connect(self.openFolder)
@@ -37,11 +39,14 @@ class FastPdfSearcherGUI(QMainWindow):
             self.selectedFolderLabel.setText(f'Selected folder: {self.folderPath}')
             self.numOfFilesLabel.setText(f'Number of files: {len(self.pdfFiles)}')
             self.resultTableWrapper.setFolderPath(self.folderPath)
+            self.searchFilesButton.setEnabled(True)
     
     def searchPDFs(self):
         pattern = self.patternEdit.text()
+        self.searchFilesButton.setEnabled(False)
         result = self.fastPdfSearcher.searchPDFs(self.folderPath, self.pdfFiles, pattern)
         self.resultTableWrapper.populateTable(result)
+        self.searchFilesButton.setEnabled(True)
     
     def showEvent(self, event):
         super().showEvent(event)
