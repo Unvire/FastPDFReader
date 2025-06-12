@@ -1,3 +1,5 @@
+import os, subprocess, sys, platform
+
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 
 class ResultTableWidgetWrapper:    
@@ -7,7 +9,12 @@ class ResultTableWidgetWrapper:
         self.tableWidget = tableWidget
         self._setTableColumns()
 
-        self.tableWidget.cellClicked.connect(self._handleRowClick)
+        self.folderPath = ''
+
+        self.tableWidget.itemDoubleClicked.connect(self._rowDoubleClickEvent)
+    
+    def setFolderPath(self, folderPath:str):
+        self.folderPath = folderPath
 
     def adjustColumnWidth(self):
         tableWidth = self.tableWidget.viewport().width()
@@ -26,5 +33,40 @@ class ResultTableWidgetWrapper:
         header.setSectionResizeMode(0, QHeaderView.Interactive)
         header.setSectionResizeMode(1, QHeaderView.Interactive)
     
-    def _handleRowClick(self):
-        pass
+    def _rowDoubleClickEvent(self, item):
+        row = item.row()
+        filenameItem = self.tableWidget.item(row, 0)
+        pageItem = self.tableWidget.item(row, 1)
+
+        if not(filenameItem and pageItem):
+            return 
+        
+        filename = filenameItem.text()
+        self.openPdfFile(filename)
+        
+    def openPdfFile(self, filepath: str):
+        fullFilePath = os.path.join(self.folderPath, filepath)
+        handler = PdfOpenerFactory()
+        handler.openFile(fullFilePath)
+
+class PdfOpenerFactory:
+    def __init__(self):
+        self.platformHandlersDict = {
+            'darwin': self._openMacOs,
+            'Windows': self._openWindows,
+            'linux': self._openLinux
+        }
+        osType = platform.system()
+        self.platformOpenHandle = self.platformHandlersDict[osType]
+    
+    def openFile(self, filePath:str):
+        self.platformOpenHandle(filePath)
+    
+    def _openMacOs(self, filePath:str):
+        subprocess.call(('open', filePath))
+    
+    def _openWindows(self, filePath:str):
+        os.startfile(filePath)
+    
+    def _openLinux(self, filePath:str):
+        subprocess.call(('xdg-open', filePath))

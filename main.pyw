@@ -1,7 +1,6 @@
 import sys, os
 
 from PyQt5 import QtWidgets, uic
-from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow
 
 from wrapperTableWidget import ResultTableWidgetWrapper
@@ -37,6 +36,7 @@ class FastPdfSearcherGUI(QMainWindow):
             self.pdfFiles = [name for name in os.listdir(self.folderPath) if name.lower().endswith('.pdf')]
             self.selectedFolderLabel.setText(f'Selected folder: {self.folderPath}')
             self.numOfFilesLabel.setText(f'Number of files: {len(self.pdfFiles)}')
+            self.resultTableWrapper.setFolderPath(self.folderPath)
     
     def searchPDFs(self):
         pattern = self.patternEdit.text()
