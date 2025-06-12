@@ -17,11 +17,9 @@ class FastPdfSearcher:
     
     def _splitFilesListToChunks(self, pdfFileNames:list[str], numOfChunks:int) -> list[list[str]]:
         result = [[] for _ in range(numOfChunks)]
-        fileNamesCopy = pdfFileNames[:]
-        while fileNamesCopy:
-            chunk = result.pop(0)
-            chunk.append(fileNamesCopy.pop(0))
-            result.append(chunk)
+        for i, name in enumerate(pdfFileNames):
+            chunkIndex = i % numOfChunks
+            result[chunkIndex].append(name)
         return result
     
     def _flattenSearchResult(self, searchResults:list[list[tuple[str, int]]]) -> list[tuple[str, int]]:
