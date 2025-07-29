@@ -1,11 +1,11 @@
-import sys, os, threading
+import sys, os
 
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QMainWindow
 
-from wrapperTableWidget import ResultTableWidgetWrapper
-from fastPdfSearcher import FastPdfSearcherWorker
-from pdfFileFinder import PdfFileFinder
+from workers.wrapperTableWidget import ResultTableWidgetWrapper
+from workers.fastPdfSearcher import FastPdfSearcherWorker
+from workers.pdfFileFinder import PdfFileFinder
 
 class FastPdfSearcherGUI(QMainWindow):
     def __init__(self):
