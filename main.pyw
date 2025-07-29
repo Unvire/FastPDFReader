@@ -48,6 +48,7 @@ class FastPdfSearcherGUI(QMainWindow):
         dialog.setWindowTitle('Select Directory or paste path in the "Directory" field')
 
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            self.searchFilesButton.setEnabled(False)
             self.resultTableWrapper.clear()
             self.folderPath = dialog.selectedFiles()[0]
             self.selectedFolderLabel.setText(f'Selected root folder: {self.folderPath}')
