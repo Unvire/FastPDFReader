@@ -16,10 +16,13 @@ def _searchSinglePdf(args) -> None|tuple[str, int]:
         if re.search(regexPattern, fileNameOnly):
             return pdfFileName, 0
         
-        for i, page in enumerate(doc):
-            text = page.get_text()
-            if re.search(regexPattern, text):
-                return pdfFileName, i + 1
+        try:
+            for i, page in enumerate(doc):
+                text = page.get_text()
+                if re.search(regexPattern, text):
+                    return pdfFileName, i + 1
+        except Exception:
+            return
 
 class FastPdfSearcherWorker(QtCore.QObject):
     resultFoundSignal = QtCore.pyqtSignal(str, int)   # filename, page
