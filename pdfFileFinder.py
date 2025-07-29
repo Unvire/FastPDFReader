@@ -1,7 +1,7 @@
 from PyQt5 import QtCore
 import os
 
-class PdfFileSearcher(QtCore.QObject):
+class PdfFileFinder(QtCore.QObject):
     filesCountChangedSignal = QtCore.pyqtSignal(int)
     finishedSignal = QtCore.pyqtSignal()
 
@@ -10,7 +10,7 @@ class PdfFileSearcher(QtCore.QObject):
         self.folderPath = folderPath
         self.pdfFiles = []
 
-    def searchPdfs(self):
+    def findPdfs(self):
         numOfFiles = 0
         for subFolder, _, files in os.walk(self.folderPath):
             for fileName in files:
@@ -23,3 +23,6 @@ class PdfFileSearcher(QtCore.QObject):
                 self.filesCountChangedSignal.emit(numOfFiles)
         
         self.finishedSignal.emit()
+    
+    def getPdfFiles(self) -> list[str]:
+        return self.pdfFiles
