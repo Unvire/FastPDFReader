@@ -1,7 +1,7 @@
 ## Fast PDF Reader
-Assume that you have 300 PDF files in one folder and you want to find the one with API documentation. The names of the files aren't meaningful, so you either have to find the file manually or you can use this tool.
+Assume that you have a lot of PDF files and you want to find the ones with API documentation. The names of the files aren't meaningful, so you either have to find the file manually or you can use this tool.
 
-This simple program search given patter (regex) in PDF files in chosen folder. The results are displayed in a table. You can click a row to open the file.
+This simple program search given pattern (regex) in PDF files in subfolders of chosen folder. Name of the file is also validated with regex. The results are displayed in a table. You can click a row to open the file.
 
 ## How to install
 1. Install python - tool was made with `python 3.12.9`.
