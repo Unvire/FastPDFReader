@@ -1,35 +1,49 @@
 import os, re, multiprocessing
 import fitz
 
-class FastPdfSearcher:
-    def searchPDFs(self, folderPath:str, pdfFileNames:list[str], pattern:str) -> list[tuple[str, int]]:
-        numOfProcesses = self._numberOfProcesses()
-        pdfFileNamesChunked = self._splitFilesListToChunks(pdfFileNames, numOfProcesses)
+from PyQt5 import QtCore
 
-        processArguments = [(folderPath, chunk, pattern) for chunk in pdfFileNamesChunked]
+def _searchPdfChunk(args):
+    return FastPdfSearcher.searchPdfChunk(args)
+
+class FastPdfSearcherWorker(QtCore.QObject):
+    resultFoundSignal = QtCore.pyqtSignal(str, int)   # filename, page
+    finishedSignal = QtCore.pyqtSignal()
+
+    def __init__(self, folderPath:str, pdfFiles:list[str], pattern:str):
+        super().__init__()
+        self.folderPath = folderPath
+        self.pdfFiles = pdfFiles
+        self.pattern = pattern
+
+    def run(self):
+        numOfProcesses = multiprocessing.cpu_count()
+        chunks = self._splitFilesListToChunks(self.pdfFiles, numOfProcesses)
+
         with multiprocessing.Pool(processes=numOfProcesses) as pool:
-            results = pool.map(FastPdfSearcher.searchPdfChunk, processArguments)
-        
-        return self._flattenSearchResult(results)
-    
-    def _numberOfProcesses(self) -> int:
-        return multiprocessing.cpu_count()
-    
+            for chunk in chunks:
+                pool.apply_async(
+                    _searchPdfChunk,
+                    args=((self.folderPath, chunk, self.pattern),),
+                    callback=self._onChunkReady
+                )
+            pool.close()
+            pool.join()
+
+        self.finishedSignal.emit()
+
+    def _onChunkReady(self, chunk_result: list[tuple[str, int]]):
+        for filename, page in chunk_result:
+            self.resultFoundSignal.emit(filename, page)
+
     def _splitFilesListToChunks(self, pdfFileNames:list[str], numOfChunks:int) -> list[list[str]]:
         result = [[] for _ in range(numOfChunks)]
         for i, name in enumerate(pdfFileNames):
             chunkIndex = i % numOfChunks
             result[chunkIndex].append(name)
         return result
-    
-    def _flattenSearchResult(self, searchResults:list[list[tuple[str, int]]]) -> list[tuple[str, int]]:
-        resultFlattened = []
-        for chunkResult in searchResults:
-            if not chunkResult:
-                continue
-            resultFlattened += chunkResult
-        return resultFlattened
 
+class FastPdfSearcher:
     @staticmethod
     def searchPdfChunk(processArguments) -> list[tuple[str, int]]:
         folderPath, pdfFileNames, regexPattern = processArguments
@@ -39,7 +53,7 @@ class FastPdfSearcher:
             try:
                 file = fitz.open(pdfFilePath)
             except Exception as e:
-                print(f"Błąd przy otwieraniu {pdfFilePath}: {e!r}")
+                print(f'Error in opening {pdfFilePath}: {e!r}')
                 continue
 
             with file:
@@ -51,12 +65,3 @@ class FastPdfSearcher:
                         result.append(subResult)
                         break
         return result
-
-if __name__ == '__main__':
-    path = r'B:\PROJECTS_U62\ENERGY\ENEL\2. ENDESA\4. Nexy - M\01_Requirements\01_Customer\00_DMI\DMI NEXY-M LITE\DMIs'
-    pdfFiles = [name for name in os.listdir(path) if name.lower().endswith('.pdf')]
-    pattern = 'STANDARD'
-    
-    instance = FastPdfSearcher()
-    result = instance.searchPDFs(path, pdfFiles, pattern)
-    print(result)

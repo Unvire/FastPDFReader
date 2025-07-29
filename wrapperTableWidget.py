@@ -1,12 +1,13 @@
 import os, subprocess, platform
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot, QObject
 
-class ResultTableWidgetWrapper:    
+class ResultTableWidgetWrapper(QObject):    
     COLUMNS_WEIGHT = [0.85, 0.15]
 
     def __init__(self, tableWidget:QTableWidget):
+        super().__init__()   
         self.tableWidget = tableWidget
         self._setTableColumns()
 
@@ -24,12 +25,16 @@ class ResultTableWidgetWrapper:
         self.tableWidget.setColumnWidth(0, int(ResultTableWidgetWrapper.COLUMNS_WEIGHT[0] * tableWidth))
         self.tableWidget.setColumnWidth(1, int(ResultTableWidgetWrapper.COLUMNS_WEIGHT[1] * tableWidth))
     
-    def populateTable(self, searchResult:list[tuple[str, int]]):
+    def clear(self):
         self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(len(searchResult))
-        for row, (filename, page) in enumerate(searchResult):
-            self.tableWidget.setItem(row, 0, QTableWidgetItem(filename))
-            self.tableWidget.setItem(row, 1, QTableWidgetItem(str(page)))
+        self.tableWidget.setRowCount(0)
+
+    @pyqtSlot(str, int)
+    def addTableRow(self, filename:str, page:int):
+        row = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(row)
+        self.tableWidget.setItem(row, 0, QTableWidgetItem(filename))
+        self.tableWidget.setItem(row, 1, QTableWidgetItem(str(page)))
     
     def _setTableColumns(self):
         header = self.tableWidget.horizontalHeader()

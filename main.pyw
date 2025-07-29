@@ -4,7 +4,7 @@ from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QMainWindow
 
 from wrapperTableWidget import ResultTableWidgetWrapper
-from fastPdfSearcher import FastPdfSearcher
+from fastPdfSearcher import FastPdfSearcherWorker
 from pdfFileFinder import PdfFileFinder
 
 class FastPdfSearcherGUI(QMainWindow):
@@ -17,7 +17,10 @@ class FastPdfSearcherGUI(QMainWindow):
         self.pdfFiles = []
         
         self.resultTableWrapper = ResultTableWidgetWrapper(self.tableWidget)
-        self.fastPdfSearcher = FastPdfSearcher()
+        self.finderWorker = None
+        self.searchFilesThread = None
+        self.fastPdfSearcherFinderWorker = None
+        self.fastPdfSearcherThread = None
         
         self.bindEvents()
         self.searchFilesButton.setEnabled(False)
@@ -34,7 +37,7 @@ class FastPdfSearcherGUI(QMainWindow):
             self.searchFilesThread.quit()
             self.searchFilesThread.wait()
             self.resultTableWrapper.setFolderPath(self.folderPath)
-            self.pdfFiles = self.worker.getPdfFiles()
+            self.pdfFiles = self.finderWorker.getPdfFiles()
             self.searchFilesButton.setEnabled(True)
         
         dialog = QtWidgets.QFileDialog()
@@ -48,25 +51,41 @@ class FastPdfSearcherGUI(QMainWindow):
             self.folderPath = dialog.selectedFiles()[0]
             self.selectedFolderLabel.setText(f'Selected root folder: {self.folderPath}')
 
-            self.worker = PdfFileFinder(self.folderPath)
+            self.finderWorker = PdfFileFinder(self.folderPath)
             self.searchFilesThread = QtCore.QThread()
-            self.worker.moveToThread(self.searchFilesThread)
+            self.finderWorker.moveToThread(self.searchFilesThread)
 
-            self.worker.filesCountChangedSignal.connect(updateFilesCount)
-            self.worker.finishedSignal.connect(findFilesFinished)
-            self.searchFilesThread.started.connect(self.worker.findPdfs)
+            self.finderWorker.filesCountChangedSignal.connect(updateFilesCount)
+            self.finderWorker.finishedSignal.connect(findFilesFinished)
+            self.searchFilesThread.started.connect(self.finderWorker.findPdfs)
 
             self.searchFilesThread.start()
     
     def searchPDFs(self):
+        @QtCore.pyqtSlot()
+        def onSearchFinished():
+            self.searchFilesButton.setEnabled(True)
+            self.fastPdfSearcherThread.quit()
+            self.fastPdfSearcherThread.wait()
+            self.fastPdfSearcherFinderWorker.deleteLater()
+            self.fastPdfSearcherThread.deleteLater()
+
         pattern = self.patternEdit.text()
         if not pattern:
             return 
         
         self.searchFilesButton.setEnabled(False)
-        result = self.fastPdfSearcher.searchPDFs(self.folderPath, self.pdfFiles, pattern)
-        self.resultTableWrapper.populateTable(result)
-        self.searchFilesButton.setEnabled(True)
+        self.resultTableWrapper.clear()
+
+        self.fastPdfSearcherFinderWorker = FastPdfSearcherWorker(self.folderPath, self.pdfFiles, pattern)
+        self.fastPdfSearcherThread = QtCore.QThread(self)
+        self.fastPdfSearcherFinderWorker.moveToThread(self.fastPdfSearcherThread)
+
+        self.fastPdfSearcherThread.started.connect(self.fastPdfSearcherFinderWorker.run)
+        self.fastPdfSearcherFinderWorker.resultFoundSignal.connect(self.resultTableWrapper.addTableRow)
+        self.fastPdfSearcherFinderWorker.finishedSignal.connect(onSearchFinished)
+
+        self.fastPdfSearcherThread.start()
     
     def showEvent(self, event):
         super().showEvent(event)
