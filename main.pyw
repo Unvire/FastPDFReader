@@ -1,10 +1,11 @@
-import sys, os
+import sys, os, threading
 
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QMainWindow
 
 from wrapperTableWidget import ResultTableWidgetWrapper
 from fastPdfSearcher import FastPdfSearcher
+from pdfFileSearcher import PdfFileSearcher
 
 class FastPdfSearcherGUI(QMainWindow):
     def __init__(self):
@@ -14,11 +15,11 @@ class FastPdfSearcherGUI(QMainWindow):
 
         self.folderPath = ""
         self.pdfFiles = []
+        
         self.resultTableWrapper = ResultTableWidgetWrapper(self.tableWidget)
         self.fastPdfSearcher = FastPdfSearcher()
         
         self.bindEvents()
-
         self.searchFilesButton.setEnabled(False)
     
     def bindEvents(self):
@@ -35,23 +36,26 @@ class FastPdfSearcherGUI(QMainWindow):
 
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             self.folderPath = dialog.selectedFiles()[0]
-            self.pdfFiles = self._searchForPDFFilesInSubfolders(self.folderPath)
-            
             self.selectedFolderLabel.setText(f'Selected root folder: {self.folderPath}')
-            self.numOfFilesLabel.setText(f'Number of files: {len(self.pdfFiles)}')
-            self.resultTableWrapper.setFolderPath(self.folderPath)
-            self.searchFilesButton.setEnabled(True)
-    
-    def _searchForPDFFilesInSubfolders(self, rootPath:str) -> list[str]:
-        pdfFiles = []
-        for subFolderPath, _, files  in os.walk(rootPath):
-            for fileName in files:
-                if not fileName.lower().endswith('.pdf'):
-                    continue
 
-                fullFilePath = os.path.join(subFolderPath, fileName)
-                pdfFiles.append(fullFilePath)
-        return pdfFiles
+            self.worker = PdfFileSearcher(self.folderPath)
+            self.searchFilesThread = QtCore.QThread()
+            self.worker.moveToThread(self.searchFilesThread)
+
+            self.worker.filesCountChangedSignal.connect(self.updateFilesCount)
+            self.worker.finishedSignal.connect(self.searchFilesFinished)
+            self.searchFilesThread.started.connect(self.worker.searchPdfs)
+
+            self.searchFilesThread.start()
+    
+    def updateFilesCount(self, count:int):
+        self.numOfFilesLabel.setText(f'Number of files: {count}')
+    
+    def searchFilesFinished(self):
+        self.searchFilesThread.quit()
+        self.searchFilesThread.wait()
+        self.resultTableWrapper.setFolderPath(self.folderPath)
+        self.searchFilesButton.setEnabled(True)
     
     def searchPDFs(self):
         pattern = self.patternEdit.text()

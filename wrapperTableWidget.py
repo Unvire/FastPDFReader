@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt
 
 class ResultTableWidgetWrapper:    
-    COLUMNS_WEIGHT = [0.7, 0.3]
+    COLUMNS_WEIGHT = [0.85, 0.15]
 
     def __init__(self, tableWidget:QTableWidget):
         self.tableWidget = tableWidget
