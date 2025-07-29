@@ -35,14 +35,29 @@ class FastPdfSearcherGUI(QMainWindow):
 
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             self.folderPath = dialog.selectedFiles()[0]
-            self.pdfFiles = [name for name in os.listdir(self.folderPath) if name.lower().endswith('.pdf')]
-            self.selectedFolderLabel.setText(f'Selected folder: {self.folderPath}')
+            self.pdfFiles = self._searchForPDFFilesInSubfolders(self.folderPath)
+            
+            self.selectedFolderLabel.setText(f'Selected root folder: {self.folderPath}')
             self.numOfFilesLabel.setText(f'Number of files: {len(self.pdfFiles)}')
             self.resultTableWrapper.setFolderPath(self.folderPath)
             self.searchFilesButton.setEnabled(True)
     
+    def _searchForPDFFilesInSubfolders(self, rootPath:str) -> list[str]:
+        pdfFiles = []
+        for subFolderPath, _, files  in os.walk(rootPath):
+            for fileName in files:
+                if not fileName.lower().endswith('.pdf'):
+                    continue
+
+                fullFilePath = os.path.join(subFolderPath, fileName)
+                pdfFiles.append(fullFilePath)
+        return pdfFiles
+    
     def searchPDFs(self):
         pattern = self.patternEdit.text()
+        if not pattern:
+            return 
+        
         self.searchFilesButton.setEnabled(False)
         result = self.fastPdfSearcher.searchPDFs(self.folderPath, self.pdfFiles, pattern)
         self.resultTableWrapper.populateTable(result)
