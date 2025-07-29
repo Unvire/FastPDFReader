@@ -12,6 +12,10 @@ def _searchSinglePdf(args) -> None|tuple[str, int]:
         return
     
     with doc:
+        fileNameOnly = os.path.basename(pdfFileName).split('.')[0]
+        if re.search(regexPattern, fileNameOnly):
+            return pdfFileName, 0
+        
         for i, page in enumerate(doc):
             text = page.get_text()
             if re.search(regexPattern, text):
