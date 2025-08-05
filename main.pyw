@@ -96,12 +96,22 @@ class FastPdfSearcherGUI(QMainWindow):
         self.fastPdfSearcherThread.start()
     
     def stopSearching(self, event):
-        if hasattr(self, 'finderWorker') and self.finderWorker:
-            self.finderWorker.stop()  
-        if hasattr(self, 'searchFilesThread') and self.searchFilesThread:
-            self.searchFilesThread.quit()
-            self.searchFilesThread.wait()
+        def stopFindingPdfs():
+            if self.finderWorker:
+                self.finderWorker.stop()  
+            if self.searchFilesThread:
+                self.searchFilesThread.quit()
+                self.searchFilesThread.wait()
         
+        def stopSearchingPdfs():
+            if self.fastPdfSearcherFinderWorker:
+                self.fastPdfSearcherFinderWorker.stop()
+            if self.fastPdfSearcherThread:
+                self.fastPdfSearcherThread.quit()
+                self.fastPdfSearcherThread.wait()
+        
+        stopFindingPdfs()
+        stopSearchingPdfs()
         self._setWidgetsStateDuringSearch(False)
     
     def showEvent(self, event):

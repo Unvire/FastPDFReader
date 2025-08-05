@@ -4,7 +4,7 @@ import fitz
 from PyQt5 import QtCore
 
 def _searchSinglePdf(args) -> None|tuple[str, int]:
-    folderPath, pdfFileName, regexPattern = args
+    folderPath, pdfFileName, regexPattern, stopFlag = args
     pdfPath = os.path.join(folderPath, pdfFileName)
     try:
         doc = fitz.open(pdfPath)
@@ -12,6 +12,9 @@ def _searchSinglePdf(args) -> None|tuple[str, int]:
         return
     
     with doc:
+        if stopFlag.value:
+            return
+
         fileNameOnly = os.path.basename(pdfFileName).split('.')[0]
         if re.search(regexPattern, fileNameOnly):
             return pdfFileName, 0
@@ -34,19 +37,35 @@ class FastPdfSearcherWorker(QtCore.QObject):
         self.pdfFiles = pdfFiles
         self.pattern = pattern
 
-    def run(self):
-        numOfProcesses = multiprocessing.cpu_count()        
-        poolArguments = [(self.folderPath, filename, self.pattern) for filename in self.pdfFiles]
+        self.pool = None
+        self.isForcedTerminate = False
+        self.manager = None
 
-        pool = multiprocessing.Pool(processes=numOfProcesses)
-        for result in pool.imap_unordered(_searchSinglePdf, poolArguments):
+    def run(self):        
+        self.manager = multiprocessing.Manager()
+        stopFlag = self.manager.Value('b', False)
+
+        numOfProcesses = multiprocessing.cpu_count()       
+        poolArguments = [(self.folderPath, filename, self.pattern, stopFlag) for filename in self.pdfFiles]
+
+        self.pool = multiprocessing.Pool(processes=numOfProcesses)
+        for result in self.pool.imap_unordered(_searchSinglePdf, poolArguments):
+            if self.isForcedTerminate:
+                stopFlag.value = True
+                break
+
             if not result:
                 continue
             
             filename, page = result
             self.resultFoundSignal.emit(filename, page)
 
-        pool.close()
-        pool.join()
+        self.pool.close()
+        self.pool.join()
 
         self.finishedSignal.emit()
+    
+    def stop(self):
+        self.isForcedTerminate = True
+        if self.pool:
+            self.pool.terminate()
