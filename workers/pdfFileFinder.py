@@ -9,11 +9,20 @@ class PdfFileFinder(QtCore.QObject):
         super().__init__()
         self.folderPath = folderPath
         self.pdfFiles = []
+        
+        self._isRunning = False
 
     def findPdfs(self):
         numOfFiles = 0
+        self._isRunning = True
         for subFolder, _, files in os.walk(self.folderPath):
+            if not self._isRunning:
+                break
+            
             for fileName in files:
+                if not self._isRunning:
+                    break
+
                 if not fileName.lower().endswith('.pdf'):
                     continue
 
@@ -23,6 +32,10 @@ class PdfFileFinder(QtCore.QObject):
                 self.filesCountChangedSignal.emit(numOfFiles)
         
         self.finishedSignal.emit()
+        self.stop()
     
     def getPdfFiles(self) -> list[str]:
         return self.pdfFiles
+
+    def stop(self):
+        self._isRunning = False

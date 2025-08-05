@@ -30,6 +30,7 @@ class FastPdfSearcherGUI(QMainWindow):
     def bindEvents(self):
         self.openFolderButton.clicked.connect(self.openFolder)
         self.searchFilesButton.clicked.connect(self.searchPDFs)
+        self.stopSearchButton.clicked.connect(self.stopSearching)
 
     def openFolder(self):
         def updateFilesCount(count:int):
@@ -93,6 +94,15 @@ class FastPdfSearcherGUI(QMainWindow):
         self.fastPdfSearcherFinderWorker.finishedSignal.connect(onSearchFinished)
 
         self.fastPdfSearcherThread.start()
+    
+    def stopSearching(self, event):
+        if hasattr(self, 'finderWorker') and self.finderWorker:
+            self.finderWorker.stop()  
+        if hasattr(self, 'searchFilesThread') and self.searchFilesThread:
+            self.searchFilesThread.quit()
+            self.searchFilesThread.wait()
+        
+        self._setWidgetsStateDuringSearch(False)
     
     def showEvent(self, event):
         super().showEvent(event)
