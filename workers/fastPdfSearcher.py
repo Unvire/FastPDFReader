@@ -74,5 +74,3 @@ class FastPdfSearcherWorker(QtCore.QObject):
     
     def stop(self):
         self.isForcedTerminate = True
-        if self.pool:
-            self.pool.terminate()
