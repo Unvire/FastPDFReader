@@ -23,7 +23,9 @@ class FastPdfSearcherGUI(QMainWindow):
         self.fastPdfSearcherThread = None
         
         self.bindEvents()
-        self.searchFilesButton.setEnabled(False)
+        self._setSearchingWidgetsState(False)
+        self.stopSearchButton.setEnabled(False)
+        self.openFolderButton.setEnabled(True)
     
     def bindEvents(self):
         self.openFolderButton.clicked.connect(self.openFolder)
@@ -38,7 +40,8 @@ class FastPdfSearcherGUI(QMainWindow):
             self.searchFilesThread.wait()
             self.resultTableWrapper.setFolderPath(self.folderPath)
             self.pdfFiles = self.finderWorker.getPdfFiles()
-            self.searchFilesButton.setEnabled(True)
+
+            self._setWidgetsStateDuringSearch(False)
         
         dialog = QtWidgets.QFileDialog()
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
@@ -48,7 +51,8 @@ class FastPdfSearcherGUI(QMainWindow):
         dialog.setWindowTitle('Select Directory or paste path in the "Directory" field')
 
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.searchFilesButton.setEnabled(False)
+            self._setWidgetsStateDuringSearch(True)
+
             self.resultTableWrapper.clear()
             self.folderPath = dialog.selectedFiles()[0]
             self.selectedFolderLabel.setText(f'Selected root folder: {self.folderPath}')
@@ -66,7 +70,8 @@ class FastPdfSearcherGUI(QMainWindow):
     def searchPDFs(self):
         @QtCore.pyqtSlot()
         def onSearchFinished():
-            self.searchFilesButton.setEnabled(True)
+            self._setWidgetsStateDuringSearch(False)
+
             self.fastPdfSearcherThread.quit()
             self.fastPdfSearcherThread.wait()
             self.fastPdfSearcherFinderWorker.deleteLater()
@@ -76,7 +81,7 @@ class FastPdfSearcherGUI(QMainWindow):
         if not pattern:
             return 
         
-        self.searchFilesButton.setEnabled(False)
+        self._setWidgetsStateDuringSearch(True)
         self.resultTableWrapper.clear()
 
         self.fastPdfSearcherFinderWorker = FastPdfSearcherWorker(self.folderPath, self.pdfFiles, pattern)
@@ -97,6 +102,15 @@ class FastPdfSearcherGUI(QMainWindow):
         super().resizeEvent(event)
         self.resultTableWrapper.adjustColumnWidth()
     
+    def _setWidgetsStateDuringSearch(self, isSearchingActive:bool):
+        self._setSearchingWidgetsState(not isSearchingActive)
+        self.stopSearchButton.setEnabled(isSearchingActive)
+        self.openFolderButton.setEnabled(not isSearchingActive)
+
+    def _setSearchingWidgetsState(self, state:bool):
+        self.searchFilesButton.setEnabled(state)
+        self.filenamesOnlyCheckBox.setEnabled(state)
+
 
 
 if __name__ == '__main__':
