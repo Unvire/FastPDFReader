@@ -93,6 +93,7 @@ class FastPdfSearcherGUI(QMainWindow):
         self.fastPdfSearcherThread.started.connect(self.fastPdfSearcherFinderWorker.run)
         self.fastPdfSearcherFinderWorker.resultFoundSignal.connect(self.resultTableWrapper.addTableRow)
         self.fastPdfSearcherFinderWorker.finishedSignal.connect(onSearchFinished)
+        self.fastPdfSearcherFinderWorker.progressSignal.connect(self.updateProgressBar)
 
         self.fastPdfSearcherThread.start()
     
@@ -114,6 +115,9 @@ class FastPdfSearcherGUI(QMainWindow):
         stopFindingPdfs()
         stopSearchingPdfs()
         self._setWidgetsStateDuringSearch(False)
+    
+    def updateProgressBar(self, progressPrcent:int):
+        self.progressBar.setValue(progressPrcent)
     
     def showEvent(self, event):
         super().showEvent(event)

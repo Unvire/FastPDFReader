@@ -31,11 +31,13 @@ def _searchSinglePdf(args) -> None|tuple[str, int]:
 class FastPdfSearcherWorker(QtCore.QObject):
     resultFoundSignal = QtCore.pyqtSignal(str, int)   # filename, page
     finishedSignal = QtCore.pyqtSignal()
+    progressSignal = QtCore.pyqtSignal(int)
 
     def __init__(self, folderPath:str, pdfFiles:list[str], pattern:str, isFileNamesOnly:bool):
         super().__init__()
         self.folderPath = folderPath
         self.pdfFiles = pdfFiles
+        self.numOfFiles = len(pdfFiles)
         self.pattern = pattern
         self.isFileNamesOnly = isFileNamesOnly
 
@@ -51,16 +53,19 @@ class FastPdfSearcherWorker(QtCore.QObject):
         poolArguments = [(self.folderPath, filename, self.pattern, self.isFileNamesOnly, stopFlag) for filename in self.pdfFiles]
 
         self.pool = multiprocessing.Pool(processes=numOfProcesses)
+        i = 0
         for result in self.pool.imap_unordered(_searchSinglePdf, poolArguments):
             if self.isForcedTerminate:
                 stopFlag.value = True
                 break
 
-            if not result:
-                continue
-            
-            filename, page = result
-            self.resultFoundSignal.emit(filename, page)
+            if result:            
+                filename, page = result
+                self.resultFoundSignal.emit(filename, page)
+
+            progress = int(100 * (i + 1) / self.numOfFiles)
+            self.progressSignal.emit(progress)
+            i += 1
 
         self.pool.close()
         self.pool.join()
