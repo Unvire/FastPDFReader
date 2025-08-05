@@ -85,7 +85,8 @@ class FastPdfSearcherGUI(QMainWindow):
         self._setWidgetsStateDuringSearch(True)
         self.resultTableWrapper.clear()
 
-        self.fastPdfSearcherFinderWorker = FastPdfSearcherWorker(self.folderPath, self.pdfFiles, pattern)
+        isSearchOnlyFilenames = self.filenamesOnlyCheckBox.isChecked()
+        self.fastPdfSearcherFinderWorker = FastPdfSearcherWorker(self.folderPath, self.pdfFiles, pattern, isSearchOnlyFilenames)
         self.fastPdfSearcherThread = QtCore.QThread(self)
         self.fastPdfSearcherFinderWorker.moveToThread(self.fastPdfSearcherThread)
 

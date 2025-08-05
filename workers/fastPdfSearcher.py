@@ -4,7 +4,7 @@ import fitz
 from PyQt5 import QtCore
 
 def _searchSinglePdf(args) -> None|tuple[str, int]:
-    folderPath, pdfFileName, regexPattern, stopFlag = args
+    folderPath, pdfFileName, regexPattern, isFileNamesOnly, stopFlag = args
     pdfPath = os.path.join(folderPath, pdfFileName)
     try:
         doc = fitz.open(pdfPath)
@@ -15,27 +15,29 @@ def _searchSinglePdf(args) -> None|tuple[str, int]:
         if stopFlag.value:
             return
 
-        fileNameOnly = os.path.basename(pdfFileName).split('.')[0]
-        if re.search(regexPattern, fileNameOnly):
+        baseFileName = os.path.basename(pdfFileName).split('.')[0]
+        if re.search(regexPattern, baseFileName):
             return pdfFileName, 0
         
-        try:
-            for i, page in enumerate(doc):
-                text = page.get_text()
-                if re.search(regexPattern, text):
-                    return pdfFileName, i + 1
-        except Exception:
-            return
+        if not isFileNamesOnly:
+            try:
+                for i, page in enumerate(doc):
+                    text = page.get_text()
+                    if re.search(regexPattern, text):
+                        return pdfFileName, i + 1
+            except Exception:
+                return
 
 class FastPdfSearcherWorker(QtCore.QObject):
     resultFoundSignal = QtCore.pyqtSignal(str, int)   # filename, page
     finishedSignal = QtCore.pyqtSignal()
 
-    def __init__(self, folderPath:str, pdfFiles:list[str], pattern:str):
+    def __init__(self, folderPath:str, pdfFiles:list[str], pattern:str, isFileNamesOnly:bool):
         super().__init__()
         self.folderPath = folderPath
         self.pdfFiles = pdfFiles
         self.pattern = pattern
+        self.isFileNamesOnly = isFileNamesOnly
 
         self.pool = None
         self.isForcedTerminate = False
@@ -46,7 +48,7 @@ class FastPdfSearcherWorker(QtCore.QObject):
         stopFlag = self.manager.Value('b', False)
 
         numOfProcesses = multiprocessing.cpu_count()       
-        poolArguments = [(self.folderPath, filename, self.pattern, stopFlag) for filename in self.pdfFiles]
+        poolArguments = [(self.folderPath, filename, self.pattern, self.isFileNamesOnly, stopFlag) for filename in self.pdfFiles]
 
         self.pool = multiprocessing.Pool(processes=numOfProcesses)
         for result in self.pool.imap_unordered(_searchSinglePdf, poolArguments):
