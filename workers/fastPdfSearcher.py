@@ -50,14 +50,3 @@ class FastPdfSearcherWorker(QtCore.QObject):
         pool.join()
 
         self.finishedSignal.emit()
-
-    def _onFileMatched(self, result:tuple[str, int]):
-        filename, page = result
-        self.resultFoundSignal.emit(filename, page)
-
-    def _splitFilesListToChunks(self, pdfFileNames:list[str], numOfChunks:int) -> list[list[str]]:
-        result = [[] for _ in range(numOfChunks)]
-        for i, name in enumerate(pdfFileNames):
-            chunkIndex = i % numOfChunks
-            result[chunkIndex].append(name)
-        return result
